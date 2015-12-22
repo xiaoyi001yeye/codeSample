@@ -1,0 +1,78 @@
+import java.io.IOException;
+import java.io.StringReader;
+
+import net.paoding.analysis.analyzer.PaodingAnalyzer;
+import net.paoding.analysis.analyzer.impl.MaxWordLengthTokenCollector;
+
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.IndexWriterConfig.OpenMode;
+import org.apache.lucene.queryParser.QueryParser;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.RAMDirectory;
+import org.apache.lucene.util.Version;
+
+import com.riil.core.utils.ServerEnvUtil;
+
+// 测试"庖丁解牛"中文分词器的分词效果
+public class Test {
+    static String fieldName = "text";
+    
+    
+    public static void main(String[] args) throws Exception {
+        ServerEnvUtil.RIIL_WORK_SPACE_FOLDER="D:\\RuiJie\\RIIL\\RIIL_BMC\\workspace\\";
+        Analyzer analyzer = new PaodingAnalyzer();
+        
+        Directory directory = null;
+        IndexWriter iwriter = null;
+        IndexReader ireader = null;
+        IndexSearcher isearcher = null;
+        try {
+            directory = new RAMDirectory();
+            IndexWriterConfig iwConfig = new IndexWriterConfig(Version.LUCENE_34, analyzer);
+            iwConfig.setOpenMode(OpenMode.CREATE_OR_APPEND);
+            iwriter = new IndexWriter(directory , iwConfig);
+            Document doc = new Document();
+//            doc.add(new StringField("ID", "10000", Field.Store.YES));
+//            doc.add(new TextField(fieldName, text, Field.Store.YES));
+            iwriter.addDocument(doc);
+            iwriter.close();
+            
+//            ireader = new MemoryIndexReader();
+//            ireader.open(directory);
+//            isearcher = new IndexSearcher(ireader);         
+            isearcher = new IndexSearcher(directory); 
+            String keyword = "我不可用不可能不可以不可以道不可兼容的构造器";         
+            //使用QueryParser查询分析器构造Query对象
+            QueryParser qp = new QueryParser(Version.LUCENE_34, fieldName,  analyzer);
+            qp.setDefaultOperator(QueryParser.AND_OPERATOR);
+//            qp.setAutoGeneratePhraseQueries(true);
+//            qp.setEnablePositionIncrements(false);
+//            qp.setFuzzyMinSim(100f);
+//            qp.setFuzzyPrefixLength(100);
+//            qp.setLowercaseExpandedTerms(false);
+//            qp.setPhraseSlop(10000);
+            Query query = qp.parse(keyword);
+            TopDocs topDocs = isearcher.search(query , 5);
+            ScoreDoc[] scoreDocs = topDocs.scoreDocs;
+            for (int i = 0; i < topDocs.totalHits; i++){
+                Document targetDoc = isearcher.doc(scoreDocs[i].doc);
+                System.out.println("内容：" + targetDoc.toString());
+            }   
+//            System.out.println("命中：" + topDocs.totalHits);
+            System.out.println("Query = " + query);
+        } catch (Exception t_e) {
+            t_e.printStackTrace();
+        }
+        
+    }
+}
