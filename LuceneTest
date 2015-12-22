@@ -24,7 +24,7 @@ import org.apache.lucene.util.Version;
 import com.riil.core.utils.ServerEnvUtil;
 
 // 测试"庖丁解牛"中文分词器的分词效果
-public class Test {
+public class LuceneTest {
     static String fieldName = "text";
     
     
